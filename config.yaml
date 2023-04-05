@@ -1,14 +1,14 @@
 ingress_controller: haproxy # choose between haproxy traefik nginx
 addons: 
   - kubernetes_dashboard
-  - minio
-  - elasticsearch
-  - cerebro
-  - redis
-  - kube-prometheus-stack
-  - adminer
-  - mariadb
-  - helm_cabin
-  - docker_registry
-  - crane
-  - loki
+  # - minio
+  # - elasticsearch
+  # - cerebro
+  # - redis
+  # - kube-prometheus-stack
+  # - adminer
+  # - mariadb
+  # - helm_cabin
+  # - docker_registry
+  # - crane
+  # - loki
