@@ -1,19 +1,19 @@
 - set_fact:
-    cluster_name: kinder
-# - command: "{{binaries_path}}/kind get clusters"
-#   register: cluster_list
-# - command: "{{binaries_path}}/kind delete cluster --name={{cluster_name}}"
-#   when: cluster_name in cluster_list.stdout_lines
-# - command: "{{binaries_path}}/kind create cluster --config=kind.yaml --name={{cluster_name}}"
+    cluster_name: k8splaypen
 
-# - name: Fetch file
-#   command: kind get kubeconfig --name={{cluster_name}}
-#   register: kubeconfig
+- name: Get the list of kind clusters
+  command: "{{binaries_path}}/kind get clusters"
+  register: cluster_list
 
-# - copy:
-#     content: "{{kubeconfig.stdout}}"
-#     dest:  /home/{{ansible_user_id}}/.kube/config
-- pip:
+- name: Remove cluster {{cluster_name}}
+  command: "{{binaries_path}}/kind delete cluster --name={{cluster_name}}"
+  when: cluster_name in cluster_list.stdout_lines
+
+- name: Create cluster {{cluster_name}}
+  command: "{{binaries_path}}/kind create cluster --config=kind.yaml --name={{cluster_name}}"
+
+- name: install kubernetes pip module
+  pip:
     name: kubernetes
 
 - name: Deploy helm-controller
@@ -82,9 +82,6 @@
           tls.key: "{{lookup('file',temp_key.path) | b64encode}}"
   when: tls_secret.resources|length==0
 
-
-
-
 - name: Deploy {{ingress_controller}} ingress controller
   kubernetes.core.k8s:
     state: present
@@ -100,7 +97,6 @@
     state: present
     template: "addons/{{item}}.yaml"
   with_items: "{{addons}}"
-
 
 - name: remove unused ingresses
   kubernetes.core.k8s:
