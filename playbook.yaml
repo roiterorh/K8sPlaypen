@@ -5,6 +5,6 @@
   vars_files:
     - "{{playbook_dir}}/config.yaml"
   roles:
-    # - binaries
+    - binaries
     - kind
 
