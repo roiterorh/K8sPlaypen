@@ -1,0 +1,31 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: helm-cabin
+  namespace: kube-system
+spec:
+  repo: https://nick-triller.github.io/helm-cabin/
+  chart: helm-cabin
+  targetNamespace: ui
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: helm-cabin
+  namespace: ui
+spec:
+  ingressClassName: {{ ingress_controller }}
+  rules:
+  - host: helm-cabin.{{ domain }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: helm-cabin
+            port:
+              number: 8080
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - helm-cabin.{{ domain }}

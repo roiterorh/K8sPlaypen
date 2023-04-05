@@ -1,0 +1,168 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: dashy
+  namespace: kube-system
+spec:
+  repo: https://roiterorh.github.io/helm
+  chart: dashy
+  targetNamespace: ui
+  valuesContent: |-
+    # Page meta info, like heading, footer text and nav links
+    pageInfo:
+      title: "Hello, Dev||Ops"
+      description: "General browser startpage"
+      logo: "https://i.ibb.co/71WyyzM/little-bot-3.png"
+
+    # Optional app settings and configuration
+    appConfig:
+      hideComponents:
+        hideSearch: true
+        hideHeading: true
+        hideNav: true
+        hideSettings: true
+        hideFooter: true
+      webSearch:
+        disableWebSearch: true
+        
+      preventWriteToDisk: true
+      showSplashScreen: true
+      enableServiceWorker: true
+      statusCheck: true
+      statusCheckInterval: 60
+      colCount: 2
+      theme: colorful
+      fontAwesomeKey: c94dc2b452
+      # customCss: '.clock p.time { font-size: 3rem !important; }'
+      layout: sidebar
+      iconSize: large
+    sections:
+
+      - name: Host
+        icon: mdi-penguin
+        displayData:
+          collapsed: false
+          cols: 2
+        widgets:
+        - type: clock
+        - type: public-ip
+
+      - name: Links
+        icon: mdi-kubernetes
+        items:
+
+{% if "kubernetes_dashboard" in addons %}
+        - title: K8s dashboard
+          icon: hl-kubernetes-dashboard 
+          url: https://dash.{{ domain }}
+          statusCheckUrl: http://kubernetes-dashboard.ui.svc:8080
+{% endif %}
+
+{% if "traefik" == ingress_controller %}
+
+        - title: Traefik
+          icon: hl-traefik
+          url:  https://traefik.{{ domain }}
+
+          statusCheckUrl: http://traefik.ingress.svc:9000
+          statusCheckAcceptCodes: '404'
+{% endif %}
+
+{% if "haproxy" == ingress_controller %}
+        - title: haproxy
+          icon: hl-haproxy
+          
+          url: https://haproxy.{{ domain }}
+          statusCheckUrl: http://haproxy-kubernetes-ingress.ingress.svc:1024
+{% endif %}
+
+{% if "minio" in addons %}
+        - title: Minio UI
+          icon: hl-minio
+          url: https://minio.{{ domain }}
+          statusCheckUrl: http://minio.minio.svc:9000/minio/v2/metrics/cluster
+          description: minio/minioadmin
+        - title: Minio service
+          icon: hl-minio
+          url: https://minio-svc.{{ domain }}
+          statusCheckUrl: http://minio-console.minio.svc:9001/minio/v2/metrics/cluster
+          description: minio/minioadmin
+{% endif %}
+
+{% if "adminer" in addons %}
+        - title: Adminer
+          icon: hl-adminer
+          url: https://adminer.{{ domain }}/?server=mariadb.data.svc&username=mariadb&db=mariadb
+          statusCheckUrl: http://adminer.ui.svc
+          description: mariadb/mariadb
+{% endif %}
+
+{% if "redisinsight" in addons %}
+        - title: Redis Insight
+          icon: hl-redis
+          url: https://redisinsight.{{ domain }}
+          statusCheckUrl: http://redisinsight-service.ui.svc
+{% endif %}
+
+{% if "elasticsearch" in addons %}
+        - title: Elasticsearch
+          icon: hl-elasticsearch
+          url: https://elasticsearch.{{ domain }}
+          statusCheckUrl: http://elasticsearch-master.data.svc:9200
+{% endif %}
+
+{% if "cerebro" in addons %}
+        - title: Cerebro
+          icon: hl-elasticsearch
+          url: https://cerebro.{{ domain }}/#!/overview?host=http:%2F%2Felasticsearch-master.data:9200
+          statusCheckUrl: http://cerebro.ui.svc
+{% endif %}
+
+{% if "kube-prometheus-stack" in addons %}
+        - title: Prometheus
+          icon: hl-prometheus
+          url: https://prometheus.{{ domain }}
+          statusCheckUrl: http://kube-prometheus-stack-prometheus.monitoring:9090
+        - title: Grafana
+          icon: hl-grafana
+          url: https://grafana.{{ domain }}
+          statusCheckUrl: http://kube-prometheus-stack-grafana.monitoring
+{% endif %}
+
+{% if "crane" in addons %}
+        - title: Crane 
+          icon: hl-docker-compose
+          url: https://crane.{{ domain }}
+          description: docker registry UI 
+          statusCheckUrl: http://crane-service.ui.svc
+          statusCheckAllowInsecure: true
+{% endif %}
+
+{% if "helm_cabin" in addons %}
+        - title: Helm Cabin
+          icon: si-kubernetes
+          url: https://helm-cabin.{{ domain }}
+          statusCheckUrl: http://helm-cabin.ui.svc:8080
+{% endif %}
+      - name: Latest CVE vulnerabilities
+        displayData:
+          collapsed: false
+          rows: 2
+        widgets:
+        - type: cve-vulnerabilities
+          useProxy: true
+
+
+    ingress:
+      className: {{ ingress_controller }}
+
+      enabled: true
+      hosts:
+        - host: {{ domain }}
+          paths:
+            - path: /
+              pathType: ImplementationSpecific
+      tls: 
+      - hosts:
+          - {{ domain }}
+

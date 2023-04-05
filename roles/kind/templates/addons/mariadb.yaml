@@ -1,0 +1,30 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: mariadb
+  namespace: kube-system
+spec:
+  repo: https://charts.bitnami.com/bitnami
+  chart: mariadb
+  targetNamespace: data
+  valuesContent: |-
+
+    auth:
+      rootPassword: "mariadb"
+      database: mariadb
+      username: "mariadb"
+      password: "mariadb"
+
+
+      persistence:
+        enabled: false
+
+
+
+
+    metrics:
+      enabled: true
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9104"
+ 

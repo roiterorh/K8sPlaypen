@@ -1,0 +1,2 @@
+binaries_path: "{{playbook_dir}}/bin"
+domain: localtest.me 

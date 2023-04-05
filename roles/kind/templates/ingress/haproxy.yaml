@@ -1,0 +1,91 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: haproxy
+  namespace: kube-system
+spec:
+  repo: https://haproxytech.github.io/helm-charts
+  chart: kubernetes-ingress
+  targetNamespace: ingress
+  valuesContent: |-
+    controller:
+      config:
+        backend-server-naming: pod
+        dontlognull: "true"
+        proxy-body-size: 100m
+        server-slots: "1"
+        src-ip-header: True-Client-IP
+      containerPort:
+        http: 80
+        https: 443
+        stat: 1024
+      daemonset:
+        hostPorts:
+          http: 80
+          https: 443
+          stat: 1024
+        useHostNetwork: "true"
+        useHostPort: "false"
+      defaultTLSSecret:
+        enabled: true
+        secretNamespace: ingress
+        secret: k8s-tls
+      enableRuntimeDefaultSeccompProfile: false
+      extraEnvs:
+      - name: TZ
+        value: Europe/Prague
+      ingressClass: haproxy
+      ingressClassResource:
+        default: false
+        name: haproxy
+        parameters: {}
+      kind: DaemonSet
+      logging:
+        level: debug
+      podAnnotations:
+        prometheus.io/port: "1024"
+        prometheus.io/scrape: "true"
+        linkerd.io/inject: ingress
+        
+      resources:
+        requests:
+          cpu: 400m
+          memory: 500Mi
+      strategy:
+        rollingUpdate:
+          maxSurge: 0
+          maxUnavailable: 5
+        type: RollingUpdate
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+      nodeSelector:
+        ingress-ready: "true"
+      unprivileged: false
+    defaultBackend:
+      enableRuntimeDefaultSeccompProfile: false
+      unprivileged: false
+    podSecurityPolicy:
+      annotations: {}
+      enabled: false
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: ingress
+  name: haproxy
+  labels:
+    name: haproxy
+spec:
+  ingressClassName: haproxy
+  rules:
+    - host: haproxy.{{ domain }}
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: haproxy-kubernetes-ingress
+                port:
+                  number: 1024

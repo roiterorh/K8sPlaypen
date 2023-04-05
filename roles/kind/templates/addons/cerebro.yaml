@@ -1,0 +1,40 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: cerebro
+  namespace: kube-system
+spec:
+  repo: https://wiremind.github.io/wiremind-helm-charts
+  chart: cerebro
+  targetNamespace: ui
+  valuesContent: |-
+    # serviceAccount:
+    #   create: false
+    #   name: ""
+    #   annotations: {}
+    ingress:
+      enabled: true
+      ingressClassName: {{ingress_controller }}
+      hosts:
+        - cerebro.{{ domain }}
+      tls:
+        - hosts:
+            - cerebro.{{ domain }}
+
+    # metrics:
+    #   enabled: true
+    #   port: 5001
+    #   # Create a prometheus-operator servicemonitor
+    #   serviceMonitor:
+    #     enabled: false
+    #     labels: {}
+    #   # prometheus-operator PrometheusRule defining alerting rules for a Prometheus instance
+    #   prometheusRule:
+    #     enabled: false
+    #     labels: {}
+    #     rules: {}
+    # garbageCollect:
+    #   enabled: true
+    #   deleteUntagged: true
+    #   schedule: "0 1 * * *"
+

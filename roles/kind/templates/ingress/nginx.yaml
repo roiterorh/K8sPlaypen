@@ -1,0 +1,30 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: nginx-ingress
+  namespace: kube-system
+spec:
+  repo: https://helm.nginx.com/stable
+  chart: nginx-ingress
+  targetNamespace: ingress
+  valuesContent: |-
+    controller:
+      kind: daemonset
+      nginxDebug: true
+      logLevel: 3
+      setAsDefaultIngress: true
+      wildcardTLS:
+        secret: "ingress/k8s-tls"
+      defaultTLS:
+        secret: "ingress/k8s-tls"
+      service:
+        type: NodePort
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+      nodeSelector:
+        ingress-ready: "true"
+      healthStatus: true
+      pod:
+        annotations:
+          linkerd.io/inject: ingress

@@ -1,0 +1,53 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: minio
+  namespace: kube-system
+spec:
+  repo: https://charts.min.io/
+  chart: minio
+  targetNamespace: minio
+  valuesContent: |-
+    clusterDomain: cluster.local
+    mode: standalone 
+    rootUser: "minio"
+    rootPassword: "minioadmin"
+    persistence:
+      enabled: false
+
+    ingress:
+      enabled: true
+      ingressClassName: {{ingress_controller }}
+      hosts:
+        - minio-svc.{{ domain }}
+      tls: 
+       - hosts:
+           - minio-svc.{{ domain }}
+    consoleIngress:
+      enabled: true
+      ingressClassName: {{ingress_controller }}
+
+      hosts:
+        - minio.{{ domain }}
+      tls: 
+       - hosts:
+           - minio.{{ domain }}
+    users:
+      - accessKey: console
+        secretKey: console123
+        policy: consoleAdmin
+    buckets:
+      - name: default
+        policy: public
+        purge: true
+    environment:
+      MINIO_PROMETHEUS_URL: "http://kube-prometheus-stack-prometheus.monitoring.svc:9090"
+      MINIO_PROMETHEUS_JOB_ID: kubernetes-pods
+      MINIO_BROWSER_REDIRECT_URL: https://minio-svc.{{ domain }}
+    podAnnotations:
+      prometheus.io/path: /minio/v2/metrics/cluster
+      prometheus.io/port: "9000"
+      prometheus.io/scrape: "true"
+    resources:
+      requests:
+        memory: 500Mi

@@ -1,0 +1,57 @@
+
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: docker-registry
+  namespace: kube-system
+spec:
+  repo: https://helm.twun.io
+  chart: docker-registry
+  targetNamespace: registry
+  valuesContent: |-
+    serviceAccount:
+      create: false
+      name: ""
+      annotations: {}
+    ingress:
+      enabled: true
+      className: {{ingress_controller }}
+      hosts:
+        - registry.{{ domain }}
+      tls:
+        - hosts:
+            - registry.{{ domain }}
+    metrics:
+      enabled: true
+      port: 5001
+      # Create a prometheus-operator servicemonitor
+      serviceMonitor:
+        enabled: false
+        labels: {}
+      # prometheus-operator PrometheusRule defining alerting rules for a Prometheus instance
+      prometheusRule:
+        enabled: false
+        labels: {}
+        rules: {}
+    garbageCollect:
+      enabled: true
+      deleteUntagged: true
+      schedule: "0 1 * * *"
+    service:
+      # name: registry
+      type: NodePort
+      # sessionAffinity: None
+      # sessionAffinityConfig: {}
+      # clusterIP:
+      # port: 5000
+      nodePort: 31500
+    nodeSelector:
+      ingress-ready: "true"
+    tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists     
+    persistence:
+      accessMode: 'ReadWriteOnce'
+      enabled: true
+      size: 10Gi
+      # storageClass: '-'

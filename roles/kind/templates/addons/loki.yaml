@@ -1,0 +1,15 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: loki
+  namespace: kube-system
+spec:
+  repo: https://grafana.github.io/helm-charts
+  chart: loki-stack
+  targetNamespace: monitoring
+  valuesContent: |-
+    test_pod: 
+      enabled: false
+    serviceMonitor:
+        # -- If enabled, ServiceMonitor resources for Prometheus Operator are created
+        enabled:  true

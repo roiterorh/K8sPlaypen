@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: crane-service
+  namespace: ui
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: crane
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crane
+  namespace: ui
+
+  labels:
+    app: crane
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crane
+  template:
+    metadata:
+      labels:
+        app: crane
+    spec:
+      containers:
+        - name: crane
+          image: parabuzzle/craneoperator
+          imagePullPolicy: IfNotPresent
+          env:
+          - name:  REGISTRY_HOST
+            value:  docker-registry.registry
+          - name:  REGISTRY_PORT
+            value:  "5000"   
+          - name:  REGISTRY_PROTOCOL
+            value:  http   
+          - name:  REGISTRY_ALLOW_DELETE
+            value:  "false"   
+          - name:  REGISTRY_PUBLIC_URL
+            value: registry.{{ domain }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: crane
+  namespace: ui
+  labels:
+    name: crane
+spec:
+  ingressClassName: {{ingress_controller }}
+
+  rules:
+    - host: crane.{{ domain }}
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: crane-service
+                port:
+                  number: 80

@@ -1,0 +1,45 @@
+
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: kubernetes-dashboard
+  namespace: kube-system
+spec:
+  repo: https://kubernetes.github.io/dashboard/
+  chart: kubernetes-dashboard
+  targetNamespace: ui
+  valuesContent: |-
+    extraArgs:
+      - --enable-skip-login
+      - --enable-insecure-login
+      - --system-banner="Welcome to Kubernetes"
+    protocolHttp: true
+    service:
+      externalPort: 8080
+    ingress:
+      enabled: true
+      className: {{ ingress_controller }}
+      hosts:
+        - dash.{{ domain }}
+      tls:
+        - hosts:
+            - dash.{{ domain }}
+    metricsScraper:
+      enabled: true
+    podAnnotations:
+      prometheus.io/path: /metrics
+      prometheus.io/port: "9090"
+      prometheus.io/scrape: "true"
+    rbac:
+      clusterReadOnlyRole: true
+      clusterReadOnlyRoleAdditionalRules: 
+        - apiGroups:
+          - '*'
+          resources:
+          - '*'
+          verbs:
+          - '*'
+        - nonResourceURLs:
+          - '*'
+          verbs:
+          - '*'

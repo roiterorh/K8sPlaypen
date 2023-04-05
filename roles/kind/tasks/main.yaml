@@ -1,0 +1,120 @@
+- set_fact:
+    cluster_name: kinder
+# - command: "{{binaries_path}}/kind get clusters"
+#   register: cluster_list
+# - command: "{{binaries_path}}/kind delete cluster --name={{cluster_name}}"
+#   when: cluster_name in cluster_list.stdout_lines
+# - command: "{{binaries_path}}/kind create cluster --config=kind.yaml --name={{cluster_name}}"
+
+# - name: Fetch file
+#   command: kind get kubeconfig --name={{cluster_name}}
+#   register: kubeconfig
+
+# - copy:
+#     content: "{{kubeconfig.stdout}}"
+#     dest:  /home/{{ansible_user_id}}/.kube/config
+- pip:
+    name: kubernetes
+
+- name: Deploy helm-controller
+  kubernetes.core.k8s:
+    state: present
+    template: helm-controller.yaml
+
+- name: Wait for HelmCharts CRD
+  kubernetes.core.k8s_info:
+    api_version: apiextensions.k8s.io/v1
+    kind: CustomResourceDefinition
+    name: helmcharts.helm.cattle.io
+  register: crd_list
+  until: ( crd_list.resources | length ) > 0
+  retries: 10
+  delay: 10
+
+- name: Create namespaces
+  kubernetes.core.k8s:
+    name: "{{item}}"
+    api_version: v1
+    kind: Namespace
+    state: present
+  with_items:
+    - minio
+    - registry
+    - ui
+    - data
+    - monitoring
+    - ingress
+
+- name: check if tls cert present
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Secret
+    name: k8s-tls
+    namespace: ingress
+  register: tls_secret
+
+
+- block:
+  - name: Create temporary file
+    ansible.builtin.tempfile:
+      state: file
+      suffix: crt
+    register: temp_cert
+  - name: Create temporary file
+    ansible.builtin.tempfile:
+      state: file
+      suffix: crt
+    register: temp_key
+
+  - command: "mkcert -install -cert-file {{temp_cert.path}} -key-file {{temp_key.path}} *.{{domain}} {{domain}}"
+
+  - name: Create a k8s namespace
+    kubernetes.core.k8s:
+      definition:
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: k8s-tls
+          namespace: ingress
+        type: kubernetes.io/tls
+        data: 
+          tls.crt: "{{lookup('file',temp_cert.path) | b64encode}}"
+          tls.key: "{{lookup('file',temp_key.path) | b64encode}}"
+  when: tls_secret.resources|length==0
+
+
+
+
+- name: Deploy {{ingress_controller}} ingress controller
+  kubernetes.core.k8s:
+    state: present
+    template: "ingress/{{ingress_controller}}.yaml"
+
+- name: Deploy homepage
+  kubernetes.core.k8s:
+    state: present
+    template: "dashy.yaml"
+
+- name: Deploy addons
+  kubernetes.core.k8s:
+    state: present
+    template: "addons/{{item}}.yaml"
+  with_items: "{{addons}}"
+
+
+- name: remove unused ingresses
+  kubernetes.core.k8s:
+    state: absent
+    template: "{{item}}"
+  when: item|basename|splitext|first != ingress_controller
+  with_fileglob:
+    - "{{role_path}}/templates/ingress/*.yaml"
+
+- name: remove unused addons
+  kubernetes.core.k8s:
+    state: absent
+    template: "{{item}}"
+  when: item|basename|splitext|first not in addons
+  with_fileglob:
+    - "{{role_path}}/templates/addons/*.yaml"
+

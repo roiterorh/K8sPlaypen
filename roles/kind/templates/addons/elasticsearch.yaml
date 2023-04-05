@@ -1,0 +1,43 @@
+
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: elasticsearch
+  namespace: kube-system
+spec:
+  repo: https://helm.elastic.co
+  chart: elasticsearch
+  targetNamespace: data
+  valuesContent: |-
+    replicas: 1
+    minimumMasterNodes: 1
+    esConfig: 
+      elasticsearch.yml: |
+        xpack.security.enabled: false
+        node.roles: ["master","data","ingest"]
+        node.store.allow_mmap: false
+        xpack.security.authc:
+            anonymous:
+              username: anonymous
+              roles: superuser
+              authz_exception: false
+    createCert: false
+    persistence:
+      enabled: true
+    protocol: http
+    service:
+      enabled: true
+      httpPortName: http
+    ingress:
+      enabled: true
+      # annotations:
+      #   traefik.ingress.kubernetes.io/service.serversscheme: https
+      className: {{ ingress_controller }}
+      hosts:
+        - host: elasticsearch.{{ domain }}
+          paths:
+          - path: /
+      tls:
+        - hosts:
+            - elasticsearch.{{ domain }}
+
