@@ -66,7 +66,7 @@
       suffix: crt
     register: temp_key
 
-  - command: "mkcert -install -cert-file {{temp_cert.path}} -key-file {{temp_key.path}} *.{{domain}} {{domain}}"
+  - command: "{{binaries_path}}/mkcert -install -cert-file {{temp_cert.path}} -key-file {{temp_key.path}} *.{{domain}} {{domain}}"
 
   - name: Create a k8s namespace
     kubernetes.core.k8s:
