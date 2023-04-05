@@ -8,6 +8,7 @@ This repository provides developers with an easy-to-deploy Kubernetes environmen
 ## Prerequisites
 - The project has only been tested on Ubuntu (20.04), but we are currently working on ensuring compatibility with MacOS.
 - Deployment is done using Ansible therefore Python is required. 
+- To deploy the cluster, kind requires Docker to be installed on your system. Please ensure that Docker is installed before proceeding with the deployment. 
 - The necessary binaries will be downloaded automatically to the `bin/` directory, so no further action is required.
 
 ## How to use
@@ -88,6 +89,7 @@ Similar to ingress, add-ons can be enabled under `config.yaml`.
 - **[Minio](https://github.com/minio/minio)**
    
     A high-performance, S3-compatible object storage service that can store unstructured data such as photos, videos, and log files.
+    
     example usage:
     ```bash
     mc alias set test  https://minio-svc.localtest.me minio minioadmin
