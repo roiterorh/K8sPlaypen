@@ -12,7 +12,8 @@ This repository provides developers with an easy-to-deploy Kubernetes environmen
 - The necessary binaries will be downloaded automatically to the `bin/` directory, so no further action is required.
 
 ## How to use
-1. Run `./deploy.sh` to spin up a Kind cluster and deploy everything.
+1. clone the repository
+2. Run `./deploy.sh` to spin up a Kind cluster and deploy everything.
 2. Be patient and give the different components time to become fully deployed
 3. To access the homepage, go to https://localtest.me.
 
