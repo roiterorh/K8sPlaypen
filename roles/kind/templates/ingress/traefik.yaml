@@ -13,15 +13,11 @@ spec:
       enabled: true
       # Can be either Deployment or DaemonSet
       kind: Deployment
-      podAnnotations:
-        linkerd.io/inject: ingress
-
     ingressRoute:
       dashboard:
         enabled: true
-        matchRule: Host(`traefik.localtest.me`) 
+        matchRule: Host(`traefik.{{ domain }}`) 
         entryPoints: ["websecure"]
-
     experimental:
       plugins:
         enabled: true
@@ -40,20 +36,12 @@ spec:
       websecure:
         tls:
           enabled: true
-        ## Enable this entrypoint as a default entrypoint. When a service doesn't explicity set an entrypoint it will only use this entrypoint.
-        # asDefault: true
         port: 443
         hostPort: 443
         expose: true
         exposedPort: 443
-        ## The port protocol (TCP/UDP)
-        protocol: TCP
-        # nodePort: 32443
-        #
-
     service:
       type: ClusterIP
-
     priorityClassName: system-cluster-critical
     providers:
       kubernetesIngress:
@@ -61,8 +49,6 @@ spec:
           enabled: true
     rbac:
       enabled: true
-
-
     tolerations:
     - key: node-role.kubernetes.io/control-plane
       operator: Exists

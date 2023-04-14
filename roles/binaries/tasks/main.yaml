@@ -1,38 +1,34 @@
-- block:
-    - file: 
-        path: "{{binaries_path}}"
-        state: directory
-    - get_url:
-        url: https://dl.filippo.io/mkcert/latest?for=linux/amd64
-        dest: "{{binaries_path}}/mkcert"
-        mode: +x
-    # - uri:
-    #     url: https://dl.k8s.io/release/stable.txt
-    #     follow_redirects: true
-    #     return_content: yes
-    #   register: kubectl_version
 
-    # - get_url:
-    #     url: https://dl.k8s.io/release/{{kubectl_version.content}}/bin/linux/amd64/kubectl
-    #     dest: "{{binaries_path}}/kubectl"
+- name: Set facts
+  set_fact:
+    arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else 'ansible_architecture' }}"
+    distribution: "{{ 'linux' if ansible_distribution in ['Ubuntu','Debian'] else 'darwin'}}"
+    
+- file: 
+    path: "{{binaries_path}}"
+    state: directory
+
+- get_url:
+    url: https://dl.filippo.io/mkcert/latest?for={{distribution}}/{{arch}}
+    dest: "{{binaries_path}}/mkcert"
+    mode: +x
+
+- get_url:
+    url: https://kind.sigs.k8s.io/dl/v0.18.0/kind-{{distribution}}-{{arch}}
+    dest: "{{binaries_path}}/kind"
+    mode: +x
 
 
-    - uri:
-        url: https://github.com/helm/helm/releases
-        follow_redirects: true
-        return_content: yes
-      register: helm_version
+- uri:
+    url: https://github.com/helm/helm/releases
+    follow_redirects: true
+    return_content: yes
+  register: helm_version
 
-    - unarchive:
-        src: "https://get.helm.sh/helm-{{(helm_version.content|regex_findall('/helm/helm/releases/tag/(v3.[0-9]*.[0-9]*)'))[0]}}-linux-amd64.tar.gz"
-        dest: "{{binaries_path}}/"
-        remote_src: yes
-        extra_opts:
-          - --strip-components 
-          - 1
-          - linux-amd64/helm
+- get_url:
+    url: "https://get.helm.sh/helm-{{(helm_version.content|regex_findall('/helm/helm/releases/tag/(v3.[0-9]*.[0-9]*)'))[0]}}-{{distribution}}-{{arch}}.tar.gz"
+    dest: /tmp/helm.tar.gz
 
-    - get_url:
-        url: https://kind.sigs.k8s.io/dl/v0.18.0/kind-linux-amd64
-        dest: "{{binaries_path}}/kind"
-        mode: +x
+- command: tar -xvf  /tmp/helm.tar.gz -C {{binaries_path}}/ --strip-components 1 {{distribution}}-{{arch}}/helm
+  args:
+    creates: "{{binaries_path}}/helm"
