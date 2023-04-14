@@ -6,5 +6,5 @@
     - "{{playbook_dir}}/config.yaml"
   roles:
     - binaries
-    # - kind
+    - kind
 
