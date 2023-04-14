@@ -3,7 +3,7 @@
         path: "{{binaries_path}}"
         state: directory
     - get_url:
-        url: https://dl.filippo.io/mkcert/latest?for=linux/amd64
+        url: https://dl.filippo.io/mkcert/latest?for=darwin/amd64
         dest: "{{binaries_path}}/mkcert"
         mode: +x
     # - uri:
@@ -24,15 +24,15 @@
       register: helm_version
 
     - unarchive:
-        src: "https://get.helm.sh/helm-{{(helm_version.content|regex_findall('/helm/helm/releases/tag/(v3.[0-9]*.[0-9]*)'))[0]}}-linux-amd64.tar.gz"
+        src: "https://get.helm.sh/helm-{{(helm_version.content|regex_findall('/helm/helm/releases/tag/(v3.[0-9]*.[0-9]*)'))[0]}}-darwin-amd64.tar.gz"
         dest: "{{binaries_path}}/"
         remote_src: yes
         extra_opts:
           - --strip-components 
           - 1
-          - linux-amd64/helm
+          - darwin-amd64/helm
 
     - get_url:
-        url: https://kind.sigs.k8s.io/dl/v0.18.0/kind-linux-amd64
+        url: https://kind.sigs.k8s.io/dl/v0.18.0/kind-darwin-amd64
         dest: "{{binaries_path}}/kind"
         mode: +x
