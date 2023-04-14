@@ -29,6 +29,7 @@
     url: "https://get.helm.sh/helm-{{(helm_version.content|regex_findall('/helm/helm/releases/tag/(v3.[0-9]*.[0-9]*)'))[0]}}-{{distribution}}-{{arch}}.tar.gz"
     dest: /tmp/helm.tar.gz
 
-- command: tar -xvf  helm.tar.gz -C {{binaries_path}}/ --strip-components 1 {{distribution}}-{{arch}}/helm
-  warn: false 
-  creates: "{{binaries_path}}/helm"
+- command: tar -xvf  /tmp/helm.tar.gz -C {{binaries_path}}/ --strip-components 1 {{distribution}}-{{arch}}/helm
+  args:
+    creates: "{{binaries_path}}/helm"
+    warn: false 
